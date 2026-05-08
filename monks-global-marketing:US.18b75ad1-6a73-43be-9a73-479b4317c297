@@ -1,0 +1,265 @@
+/* {"app": "dbt", "dbt_version": "1.11.2", "profile_name": "datadbt", "target_name": "dev", "node_id": "model.datadbt.010_monks_dl_ga4"} */
+
+  
+    
+
+    create or replace table `monks-global-marketing`.`010_monks_dl_ga4`.`010_monks_dl_ga4`
+      
+    partition by date
+    cluster by event_name, user_pseudo_id, session_key
+
+    
+    OPTIONS()
+    as (
+      
+
+with base as (
+  select
+    parse_date('%Y%m%d', event_date) as date,
+    event_name,
+    user_pseudo_id,
+    user_id,
+    timestamp_micros(event_timestamp) as event_ts,
+
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'ga_session_id') as ga_session_id,
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'ga_session_number') as ga_session_number,
+
+    coalesce(
+      (select ep.value.string_value from unnest(event_params) ep where ep.key = 'session_engaged'),
+      cast((select ep.value.int_value from unnest(event_params) ep where ep.key = 'session_engaged') as string),
+      cast((select ep.value.float_value from unnest(event_params) ep where ep.key = 'session_engaged') as string),
+      cast((select ep.value.double_value from unnest(event_params) ep where ep.key = 'session_engaged') as string)
+    ) as session_engaged,
+
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'engaged_session_event') as engaged_session_event,
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'engagement_time_msec') as engagement_time_msec,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'page_location') as page_location,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'page_title') as page_title,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'page_referrer') as page_referrer,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'ignore_referrer') as ignore_referrer,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'site_section') as site_section,
+
+    coalesce(
+      (select ep.value.string_value from unnest(event_params) ep where ep.key = 'content_group'),
+      cast((select ep.value.int_value from unnest(event_params) ep where ep.key = 'content_group') as string),
+      cast((select ep.value.float_value from unnest(event_params) ep where ep.key = 'content_group') as string),
+      cast((select ep.value.double_value from unnest(event_params) ep where ep.key = 'content_group') as string)
+    ) as content_group,
+
+    coalesce(
+      (select ep.value.string_value from unnest(event_params) ep where ep.key = 'content_group2'),
+      cast((select ep.value.int_value from unnest(event_params) ep where ep.key = 'content_group2') as string),
+      cast((select ep.value.float_value from unnest(event_params) ep where ep.key = 'content_group2') as string),
+      cast((select ep.value.double_value from unnest(event_params) ep where ep.key = 'content_group2') as string)
+    ) as content_group2,
+
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'entrances') as entrances,
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'percent_scrolled') as percent_scrolled,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'origin_url') as origin_url,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'lang') as lang,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'source') as ep_source,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'medium') as ep_medium,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'campaign') as ep_campaign,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'term') as ep_term,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'gclid') as gclid,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'gad_campaignid') as gad_campaignid,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'gad_source') as gad_source,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'content_title') as content_title,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'content') as content,
+    (select ep.value.int_value from unnest(event_params) ep where ep.key = 'content_duration') as content_duration,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'form_name') as form_name,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'careers_capability') as careers_capability,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'lead_job_title') as lead_job_title,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'lead_company') as lead_company,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'lead_region') as lead_region,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'department') as department,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'action') as action,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'section') as section,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'element') as element,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'click_type') as click_type,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'link_url') as link_url,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'link_domain') as link_domain,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'link_classes') as link_classes,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'link_id') as link_id,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'link_text') as link_text,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'outbound') as outbound,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'query') as query,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'search_term') as search_term,
+    cast((select ep.value.int_value from unnest(event_params) ep where ep.key = 'unique_search_term') as string) as unique_search_term,
+
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'share') as share,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'video_title') as video_title,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'media_type') as media_type,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'media_title') as media_title,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'media_duration') as media_duration,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'media_progress') as media_progress,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'component_name') as component_name,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'file_name') as file_name,
+    (select ep.value.string_value from unnest(event_params) ep where ep.key = 'file_extension') as file_extension,
+
+    coalesce(
+      (select up.value.string_value from unnest(user_properties) up where up.key = 'support_3p_cookies'),
+      cast((select up.value.int_value from unnest(user_properties) up where up.key = 'support_3p_cookies') as string),
+      cast((select up.value.float_value from unnest(user_properties) up where up.key = 'support_3p_cookies') as string),
+      cast((select up.value.double_value from unnest(user_properties) up where up.key = 'support_3p_cookies') as string)
+    ) as support_3p_cookies,
+
+    (
+      select up.value.string_value
+      from unnest(user_properties) up
+      where up.key = 'cjs_screen_resolution'
+    ) as cjs_screen_resolution,
+
+    cast((
+      select up.value.double_value
+      from unnest(user_properties) up
+      where up.key = 'custom_client_id'
+    ) as string) as custom_client_id,
+
+    traffic_source.source as ga4_traffic_source,
+    traffic_source.medium as ga4_traffic_medium,
+    traffic_source.name as ga4_traffic_campaign,
+
+    session_traffic_source_last_click.cross_channel_campaign.source as session_source,
+    session_traffic_source_last_click.cross_channel_campaign.medium as session_medium,
+    session_traffic_source_last_click.cross_channel_campaign.campaign_name as session_campaign,
+    session_traffic_source_last_click.cross_channel_campaign.default_channel_group as session_default_channel_group,
+    session_traffic_source_last_click.cross_channel_campaign.primary_channel_group as session_primary_channel_group,
+
+    device.category as device_category,
+    device.operating_system as operating_system,
+    device.operating_system_version as operating_system_version,
+    device.language as device_language,
+    device.web_info.browser as browser,
+    device.web_info.browser_version as browser_version,
+    device.web_info.hostname as hostname,
+
+    geo.country as geo_country,
+    geo.region as geo_region,
+    geo.city as geo_city,
+    geo.continent as geo_continent,
+    geo.sub_continent as geo_sub_continent,
+
+    platform,
+    is_active_user
+
+  from `ga-cross-profile-settings.analytics_278291134.events_*`
+)
+
+select
+  date,
+  event_name,
+  user_pseudo_id,
+  user_id,
+  event_ts,
+
+  ga_session_id as session_id,
+  ga_session_number,
+  concat(
+    user_pseudo_id,
+    '_',
+    coalesce(
+      cast(ga_session_id as string),
+      cast(timestamp_trunc(event_ts, hour) as string)
+    )
+  ) as session_key,
+  case when ga_session_id is not null then true else false end as has_session_id,
+  case when event_name = 'session_start' then true else false end as is_session_start,
+  case when event_name = 'first_visit' then true else false end as is_first_visit,
+  session_engaged,
+  engaged_session_event,
+  engagement_time_msec,
+
+  page_location,
+  page_title,
+  page_referrer,
+  ignore_referrer,
+  site_section,
+  content_group,
+  content_group2,
+  entrances,
+  percent_scrolled,
+  origin_url,
+  lang,
+
+  ep_source as source,
+  ep_medium as medium,
+  ep_campaign as campaign,
+  ep_term as term,
+  gclid,
+  gad_campaignid,
+  gad_source,
+  ga4_traffic_source,
+  ga4_traffic_medium,
+  ga4_traffic_campaign,
+  session_source,
+  session_medium,
+  session_campaign,
+  session_default_channel_group,
+  session_primary_channel_group,
+
+  content_title,
+  content,
+  content_duration,
+
+  form_name,
+  careers_capability,
+  lead_job_title,
+  lead_company,
+  lead_region,
+  department,
+
+  action,
+  section,
+  element,
+  click_type,
+  link_url,
+  link_domain,
+  link_classes,
+  link_id,
+  link_text,
+  outbound,
+
+  query,
+  search_term,
+  unique_search_term,
+
+  share,
+  video_title,
+  media_type,
+  media_title,
+  media_duration,
+  media_progress,
+  component_name,
+  file_name,
+  file_extension,
+
+  support_3p_cookies,
+  cjs_screen_resolution,
+  custom_client_id,
+
+  device_category,
+  operating_system,
+  operating_system_version,
+  device_language,
+  browser,
+  browser_version,
+  hostname,
+  geo_country,
+  geo_region,
+  geo_city,
+  geo_continent,
+  geo_sub_continent,
+
+  platform,
+  is_active_user
+
+from base
+    );
+  
