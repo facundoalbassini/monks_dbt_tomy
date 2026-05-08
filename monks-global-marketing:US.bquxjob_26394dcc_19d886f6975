@@ -1,0 +1,13 @@
+SELECT
+  COUNT(DISTINCT g.user_pseudo_id) AS ga4_users,
+  COUNT(DISTINCT h.user_pseudo_id) AS hubspot_users,
+  COUNT(DISTINCT IF(h.user_pseudo_id IS NOT NULL, g.user_pseudo_id, NULL)) AS matched_users
+FROM `monks-global-marketing.010_monks_dl_ga4.010_monks_dl_ga4` g
+LEFT JOIN (
+  SELECT DISTINCT
+    CAST(C_CUSTOM_CONTACT_GACLIENTID_C AS STRING) AS user_pseudo_id
+  FROM `monks-global-marketing.000_monks_hubspot.HS_CONTACT_GAID_HUID`
+  WHERE TRIM(CAST(C_CUSTOM_CONTACT_GACLIENTID_C AS STRING)) != ''
+    AND LOWER(TRIM(CAST(C_CUSTOM_CONTACT_GACLIENTID_C AS STRING))) != 'undefined'
+) h
+ON g.user_pseudo_id = h.user_pseudo_id
