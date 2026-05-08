@@ -1,0 +1,74 @@
+/* {"app": "dbt", "dbt_version": "1.11.3", "profile_name": "datadbt", "target_name": "dev", "node_id": "model.datadbt.011_monks_dl_hubspot"} */
+
+  
+    
+
+    create or replace table `monks-global-marketing`.`010_monks_dl_hubspot`.`011_monks_dl_hubspot`
+      
+    
+    
+
+    
+    OPTIONS()
+    as (
+      
+
+select
+  cast(c_custom_contact_gaclientid_c as string) as user_pseudo_id,
+  analytics_page_url as analytics_page_url,
+
+  safe_cast(company_close_date as date) as company_close_date,
+  company_country as company_country,
+  safe_cast(company_create_date as date) as company_create_date,
+  company_description as company_description,
+  company_domain_name as company_domain_name,
+  safe_cast(company_employees as int64) as company_employees,
+  safe_cast(company_facebook_fans as int64) as company_facebook_fans,
+  company_facebook_page as company_facebook_page,
+  safe_cast(company_first_contact_create_date as date) as company_first_contact_create_date,
+  company_first_conversion as company_first_conversion,
+  safe_cast(company_first_conversion_date as date) as company_first_conversion_date,
+  safe_cast(company_first_deal_create_date as date) as company_first_deal_create_date,
+
+  contact_address as contact_address,
+  contact_city as contact_city,
+  safe_cast(contact_close_date as date) as contact_close_date,
+  contact_company as contact_company,
+  contact_country as contact_country,
+  safe_cast(contact_create_date as date) as contact_create_date,
+  safe_cast(contact_customer_date as date) as contact_customer_date,
+  safe_cast(contact_days_to_close as int64) as contact_days_to_close,
+  contact_email as contact_email,
+  contact_first_name as contact_first_name,
+  contact_first_referrer as contact_first_referrer,
+  contact_first_url as contact_first_url,
+  safe_cast(contact_first_visit as date) as contact_first_visit,
+  contact_job_title as contact_job_title,
+  contact_language as contact_language,
+  contact_last_name as contact_last_name,
+  contact_last_touch_converting_campaign as contact_last_touch_converting_campaign,
+  contact_last_url as contact_last_url,
+  safe_cast(contact_lead_date as date) as contact_lead_date,
+  contact_lifecycle_stage as contact_lifecycle_stage,
+  safe_cast(contact_likelihood_to_close as int64) as contact_likelihood_to_close,
+  safe_cast(contact_marketing_lead_date as date) as contact_marketing_lead_date,
+  contact_message as contact_message,
+  contact_mobile_phone as contact_mobile_phone,
+  contact_phone as contact_phone,
+  contact_region as contact_region,
+  safe_cast(contact_page_views as int64) as contact_page_views,
+
+  current_timestamp() as record_updated_at,
+  'hubspot' as source_system
+
+from `monks-global-marketing`.`000_monks_hubspot`.`HS_CONTACT_GAID_HUID`
+
+where trim(cast(c_custom_contact_gaclientid_c as string)) != ''
+  and lower(trim(cast(c_custom_contact_gaclientid_c as string))) != 'undefined'
+
+qualify row_number() over (
+  partition by cast(c_custom_contact_gaclientid_c as string)
+  order by safe_cast(contact_create_date as date) desc
+) = 1
+    );
+  
