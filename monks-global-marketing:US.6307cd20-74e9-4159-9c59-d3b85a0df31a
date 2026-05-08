@@ -1,0 +1,23 @@
+/* {"app": "dbt", "dbt_version": "1.11.3", "profile_name": "datadbt", "target_name": "dev", "node_id": "model.datadbt.020_monks_dt_merged_platforms"} */
+
+  
+    
+
+    create or replace table `monks-global-marketing`.`020_monks_dt_merged_platforms`.`020_monks_dt_merged_platforms`
+      
+    partition by date
+    cluster by event_name, user_pseudo_id, session_key
+
+    
+    OPTIONS()
+    as (
+      
+
+select
+  ga4.*,
+  hs.* except (user_pseudo_id)
+from `monks-global-marketing`.`010_monks_dl_ga4`.`010_monks_dl_ga4` as ga4
+left join `monks-global-marketing`.`010_monks_dl_hubspot`.`011_monks_dl_hubspot` as hs
+  on ga4.user_pseudo_id = hs.user_pseudo_id
+    );
+  
